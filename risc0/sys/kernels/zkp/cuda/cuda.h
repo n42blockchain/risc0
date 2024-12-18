@@ -18,6 +18,7 @@
 #include <cstring>
 #include <cuda_runtime.h>
 #include <stdexcept>
+#include <sys/time.h>
 
 template <typename... Types> inline std::string fmt(const char* fmt, Types... args) {
   size_t len = std::snprintf(nullptr, 0, fmt, args...);
@@ -51,6 +52,53 @@ public:
 
   inline operator cudaStream_t() const { return stream; }
 };
+
+// To see memory free reports and debug memory issues, change kReportMemoryUsed to true.
+__host__ inline void reportMemoryUsed(const char* label1, const char* label2 = "") {
+  constexpr bool kReportMemoryUsed = true;
+
+  if (kReportMemoryUsed) {
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+
+    size_t free_bytes, total_bytes;
+    CUDA_OK(cudaDeviceSynchronize());
+    CUDA_OK(cudaMemGetInfo(&free_bytes, &total_bytes));
+    printf("%lu.%03lu: %s: %s: %lu M / %lu M free (%.2f%%)\n",
+           tv.tv_sec,
+           tv.tv_usec / 1000,
+           label1, label2,
+           free_bytes / (1024 * 1024),
+           total_bytes / (1024 * 1024),
+           free_bytes * 100. / total_bytes);
+  }
+}
+
+// Free local memory, which is used for GPU thread stack space.  Some
+// kernels may use significant stack space, so this can be a way to
+// reclaim that space for other usage.
+//
+// If we could disable the CU_CTX_LMEM_RESIZE_TO_MAX cuda context flag
+// this would happen automatically, but apparently that is no longer
+// supported.
+inline void freeLocalMemory(const char* label) {
+  CUDA_OK(cudaDeviceSynchronize());
+  reportMemoryUsed(label, "Before freeLocalMemory");
+  size_t origLimit;
+  CUDA_OK(cudaDeviceGetLimit(&origLimit, cudaLimitStackSize));
+  printf("origlimit %lu\n", origLimit);
+  // Limit to 0 bytes to clear out existing allocations
+  CUDA_OK(cudaDeviceSetLimit(cudaLimitStackSize, 0));
+  CUDA_OK(cudaDeviceSynchronize());
+  size_t newLimit;
+  CUDA_OK(cudaDeviceGetLimit(&newLimit, cudaLimitStackSize));
+  printf("newLimit %lu\n", newLimit);
+  CUDA_OK(cudaDeviceSynchronize());
+  // Return to original limit
+  CUDA_OK(cudaDeviceSetLimit(cudaLimitStackSize, origLimit));
+  CUDA_OK(cudaDeviceSynchronize());
+  reportMemoryUsed(label, "After freeLocalMemory");
+}
 
 struct LaunchConfig {
   dim3 grid;

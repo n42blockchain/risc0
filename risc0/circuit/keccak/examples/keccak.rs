@@ -55,6 +55,7 @@ fn main() {
 
     let mut tot_time: f64 = 0.0;
     for i in 0..args.count {
+        println!("Starting {i}...");
         let start_time = Instant::now();
         let prover = keccak_prover().unwrap();
         let seal = prover.prove(&inputs, po2).unwrap();
@@ -67,6 +68,11 @@ fn main() {
             cycles as f64 / run_time
         );
         tot_time += run_time;
+        drop(prover);
+
+        use std::io::Write;
+        std::io::stdout().flush().unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(5));
     }
     println!(
         "{} runs of PO2={po2} completed in {tot_time:.3}s, avg={:.3}s, {:.3} cycles/sec, {:.3} keccak/sec",

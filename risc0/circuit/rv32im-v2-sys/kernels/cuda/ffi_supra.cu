@@ -70,6 +70,7 @@ const char* risc0_circuit_rv32im_v2_cuda_eval_check(Fp* check,
     eval_check<<<cfg.grid, cfg.block, 0, stream>>>(
         check, ctrl, data, accum, mix, out, rou, po2, domain);
     CUDA_OK(cudaStreamSynchronize(stream));
+    freeLocalMemory("rv32im_v2_eval_check");
   } catch (const std::exception& err) {
     return strdup(err.what());
   } catch (...) {

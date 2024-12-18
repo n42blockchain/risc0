@@ -32,7 +32,9 @@ const char* risc0_circuit_recursion_cuda_eval_check(Fp* check,
                                                     uint32_t domain,
                                                     const FpExt* poly_mix_pows) {
   cudaMemcpyToSymbol(poly_mix, poly_mix_pows, sizeof(poly_mix));
-  return launchKernel(eval_check, domain, 0, check, ctrl, data, accum, mix, out, rou, po2, domain);
+  const char* result = launchKernel(eval_check, domain, 0, check, ctrl, data, accum, mix, out, rou, po2, domain);
+  freeLocalMemory("recursion_eval_check");
+  return result;
 }
 
 } // extern "C"
