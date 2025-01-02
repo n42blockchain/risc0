@@ -20,8 +20,9 @@ pub(crate) mod local;
 
 use std::{path::PathBuf, rc::Rc};
 
-use anyhow::{anyhow, Result};
-use risc0_build::risc0_data;
+use anyhow::Result;
+use rzup::Rzup;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 
 use risc0_circuit_recursion::control_id::ALLOWED_CONTROL_IDS;
@@ -427,16 +428,40 @@ pub fn default_executor() -> Rc<dyn Executor> {
     Rc::new(ExternalProver::new("ipc", get_r0vm_path().unwrap()))
 }
 
-fn try_r0vm_path(version: String) -> Option<PathBuf> {
-    let path = risc0_data().ok()?.join("r0vm").join(version).join("r0vm");
-    tracing::debug!("Checking for r0vm: {}", path.display());
-    if let Ok(path) = path.canonicalize() {
-        if path.is_file() {
-            return Some(path);
-        }
-    }
-    None
-}
+// fn try_r0vm_path(version: String) -> Option<PathBuf> {
+//     let path = risc0_data().ok()?.join("r0vm").join(version).join("r0vm");
+//     tracing::debug!("Checking for r0vm: {}", path.display());
+//     if let Ok(path) = path.canonicalize() {
+//         if path.is_file() {
+//             return Some(path);
+//         }
+//     }
+//     None
+// }
+//
+// pub(crate) fn get_r0vm_path() -> Result<PathBuf> {
+//     if let Ok(path) = std::env::var("RISC0_SERVER_PATH") {
+//         let path = PathBuf::from(path);
+//         if path.is_file() {
+//             return Ok(path);
+//         }
+//     }
+//
+//     let version = get_version().map_err(|err| anyhow!(err))?;
+//     tracing::debug!("version: {version}");
+//
+//     if let Some(path) = try_r0vm_path(version.to_string()) {
+//         return Ok(path);
+//     }
+//
+//     if version.pre.is_empty() {
+//         if let Some(path) = try_r0vm_path(format!("{}.{}", version.major, version.minor)) {
+//             return Ok(path);
+//         }
+//     }
+//
+//     Ok("r0vm".into())
+// }
 
 pub(crate) fn get_r0vm_path() -> Result<PathBuf> {
     if let Ok(path) = std::env::var("RISC0_SERVER_PATH") {
@@ -446,18 +471,27 @@ pub(crate) fn get_r0vm_path() -> Result<PathBuf> {
         }
     }
 
-    let version = get_version().map_err(|err| anyhow!(err))?;
-    tracing::debug!("version: {version}");
+    let version = get_version()?;
 
-    if let Some(path) = try_r0vm_path(version.to_string()) {
+    tracing::debug!("Requested r0vm version: {version}");
+
+    let rzup = Rzup::new()?;
+
+    // exact version match
+    if let Some(path) = rzup.get_bin_path("r0vm", &version)? {
+        tracing::debug!("Found exact version match: {}", path.display());
         return Ok(path);
     }
 
+    // try matching major.minor version
     if version.pre.is_empty() {
-        if let Some(path) = try_r0vm_path(format!("{}.{}", version.major, version.minor)) {
+        let minor_v = Version::new(version.major, version.minor, 0);
+        if let Some(path) = rzup.get_bin_path("r0vm", &minor_v)? {
+            tracing::debug!("Found version match: {}", path.display());
             return Ok(path);
         }
     }
 
+    // fall back to using r0vm from Path
     Ok("r0vm".into())
 }

@@ -44,7 +44,12 @@ pub(crate) trait Component: std::fmt::Debug {
             version: version.to_string(),
         });
 
-        let version_dir = self.create_version_dir(env, version)?;
+        let version_dir = if self.id() == "rust" {
+            self.create_version_dir(env, version)?
+        } else {
+            self.create_version_dir(env, version)?.join("bin")
+        };
+
         let downloaded_file = self.get_downloaded(env, version)?;
 
         if force && version_dir.exists() {

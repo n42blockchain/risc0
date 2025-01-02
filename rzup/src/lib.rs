@@ -5,6 +5,7 @@ mod distribution;
 mod env;
 
 mod events;
+mod paths;
 mod settings;
 
 pub mod error;
@@ -121,30 +122,26 @@ impl Rzup {
     }
 
     // TODO: update this to work with toolchains too
-    pub fn get_bin_path(&self, component_id: &str) -> Result<PathBuf> {
-        let version = self
-            .settings()
-            .get_active_version(component_id)
-            .ok_or_else(|| {
-                RzupError::ComponentNotFound(format!(
-                    "No active version found for {}",
-                    component_id
-                ))
-            })?;
+    // pub fn get_bin_path(&self, component_id: &str) -> Result<PathBuf> {
+    //     let version = self
+    //         .settings()
+    //         .get_active_version(component_id)
+    //         .ok_or_else(|| {
+    //             RzupError::ComponentNotFound(format!(
+    //                 "No active version found for {}",
+    //                 component_id
+    //             ))
+    //         })?;
+    //
+    //     let installed_versions = self.installed_versions(component_id);
+    //     let version_dir = installed_versions.get(&version).ok_or_else(|| {
+    //         RzupError::ComponentNotFound(format!("{} version {} not found", component_id, version))
+    //     })?;
+    //
+    //     Ok(version_dir.join(component_id))
+    // }
 
-        let installed_versions = self.installed_versions(component_id);
-        let version_dir = installed_versions.get(&version).ok_or_else(|| {
-            RzupError::ComponentNotFound(format!("{} version {} not found", component_id, version))
-        })?;
-
-        Ok(version_dir.join(component_id))
-    }
-
-    pub fn get_version_path(
-        &self,
-        component_id: &str,
-        version: &Version,
-    ) -> Result<Option<PathBuf>> {
+    pub fn get_bin_path(&self, component_id: &str, version: &Version) -> Result<Option<PathBuf>> {
         let component = self.registry.create_component(component_id)?;
 
         if component.is_virtual() {
@@ -159,7 +156,7 @@ impl Rzup {
             let versions = self.installed_versions(parent_id);
 
             if let Some(path) = versions.get(version) {
-                Ok(Some(path.join(component_id)))
+                Ok(Some(path.join("bin").join(component_id)))
             } else {
                 Ok(None)
             }
