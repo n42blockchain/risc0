@@ -428,41 +428,6 @@ pub fn default_executor() -> Rc<dyn Executor> {
     Rc::new(ExternalProver::new("ipc", get_r0vm_path().unwrap()))
 }
 
-// fn try_r0vm_path(version: String) -> Option<PathBuf> {
-//     let path = risc0_data().ok()?.join("r0vm").join(version).join("r0vm");
-//     tracing::debug!("Checking for r0vm: {}", path.display());
-//     if let Ok(path) = path.canonicalize() {
-//         if path.is_file() {
-//             return Some(path);
-//         }
-//     }
-//     None
-// }
-//
-// pub(crate) fn get_r0vm_path() -> Result<PathBuf> {
-//     if let Ok(path) = std::env::var("RISC0_SERVER_PATH") {
-//         let path = PathBuf::from(path);
-//         if path.is_file() {
-//             return Ok(path);
-//         }
-//     }
-//
-//     let version = get_version().map_err(|err| anyhow!(err))?;
-//     tracing::debug!("version: {version}");
-//
-//     if let Some(path) = try_r0vm_path(version.to_string()) {
-//         return Ok(path);
-//     }
-//
-//     if version.pre.is_empty() {
-//         if let Some(path) = try_r0vm_path(format!("{}.{}", version.major, version.minor)) {
-//             return Ok(path);
-//         }
-//     }
-//
-//     Ok("r0vm".into())
-// }
-
 pub(crate) fn get_r0vm_path() -> Result<PathBuf> {
     if let Ok(path) = std::env::var("RISC0_SERVER_PATH") {
         let path = PathBuf::from(path);
