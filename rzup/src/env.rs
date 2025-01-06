@@ -1,6 +1,7 @@
 use crate::error::Result;
 use crate::RzupError;
 use crate::RzupEvent;
+
 use std::path::{Path, PathBuf};
 
 pub struct Environment {
@@ -57,10 +58,6 @@ impl Environment {
 
     pub fn root_dir(&self) -> &Path {
         &self.root_dir
-    }
-
-    pub fn component_dir(&self, id: &str) -> Result<PathBuf> {
-        Ok(self.root_dir.join(id))
     }
 
     pub fn settings_path(&self) -> &Path {
