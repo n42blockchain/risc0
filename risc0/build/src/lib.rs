@@ -37,7 +37,8 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use cargo_metadata::{Message, MetadataCommand, Package};
 use config::GuestMetadata;
-use risc0_binfmt::KERNEL_START_ADDR;
+use risc0_binfmt::{risc0_rv32im_ver, SegmentVersion, KERNEL_START_ADDR};
+use risc0_zkos_v1compat::V1COMPAT_V2_KERNEL_ID;
 use risc0_zkp::core::digest::Digest;
 use risc0_zkvm_platform::memory;
 use serde::Deserialize;
@@ -68,7 +69,9 @@ impl Risc0Metadata {
 
 trait GuestBuilder: Sized {
     fn build(guest_info: &GuestInfo, name: &str, elf_path: &str) -> Result<Self>;
+
     fn codegen_consts(&self) -> String;
+
     #[cfg(feature = "guest-list")]
     fn codegen_list_entry(&self) -> String;
 }
@@ -78,6 +81,7 @@ trait GuestBuilder: Sized {
 pub struct MinGuestListEntry {
     /// The name of the guest binary
     pub name: Cow<'static, str>,
+
     /// The path to the ELF binary
     pub path: Cow<'static, str>,
 }
@@ -172,26 +176,6 @@ fn compute_image_id_v1(elf: &[u8], elf_path: &str) -> Result<Digest> {
     })
 }
 
-fn compute_image_id_v2(elf: &[u8], elf_path: &str, is_kernel: bool) -> Result<Digest> {
-    let flag = if is_kernel {
-        "--kernel-id"
-    } else {
-        "--user-id"
-    };
-    Ok(match r0vm_image_id(elf_path, flag) {
-        Ok(image_id) => image_id,
-        Err(err) => {
-            tty_println(&format!("failed to get image ID using r0vm: {err}"));
-
-            if is_kernel {
-                risc0_binfmt::compute_kernel_id_v2(elf)?
-            } else {
-                risc0_binfmt::compute_user_id_v2(elf)?
-            }
-        }
-    })
-}
-
 impl GuestBuilder for GuestListEntry {
     /// Builds the [GuestListEntry] by reading the ELF from disk, and calculating the associated
     /// image ID.
@@ -209,10 +193,12 @@ impl GuestBuilder for GuestListEntry {
         if !is_skip_build() {
             elf = std::fs::read(elf_path)?;
             if is_kernel {
-                v2_image_id = ImageIdKind::Kernel(compute_image_id_v2(&elf, elf_path, is_kernel)?);
+                let kernel_id = risc0_binfmt::compute_kernel_id_v2(&elf)?;
+                v2_image_id = ImageIdKind::Kernel(kernel_id);
             } else {
                 image_id = compute_image_id_v1(&elf, elf_path)?;
-                v2_image_id = ImageIdKind::User(compute_image_id_v2(&elf, elf_path, is_kernel)?);
+                let user_id = risc0_binfmt::compute_user_id_v2(&elf)?;
+                v2_image_id = ImageIdKind::User(user_id);
             }
         }
 
@@ -234,7 +220,6 @@ impl GuestBuilder for GuestListEntry {
         }
 
         let upper = self.name.to_uppercase().replace('-', "_");
-        let image_id = self.image_id.as_words();
 
         let elf = if is_skip_build() {
             "&[]".to_string()
@@ -246,18 +231,37 @@ impl GuestBuilder for GuestListEntry {
 
         writeln!(&mut str, "pub const {upper}_ELF: &[u8] = {elf};").unwrap();
         writeln!(&mut str, "pub const {upper}_PATH: &str = {:?};", self.path).unwrap();
-        writeln!(&mut str, "pub const {upper}_ID: [u32; 8] = {image_id:?};").unwrap();
 
-        let (part, v2_image_id) = match self.v2_image_id {
-            ImageIdKind::User(digest) => ("USER", digest),
-            ImageIdKind::Kernel(digest) => ("KERNEL", digest),
+        let image_id_v1 = self.image_id.as_words();
+
+        let image_id_v2 = match self.v2_image_id {
+            ImageIdKind::User(user_id) => {
+                let kernel_id: Digest = V1COMPAT_V2_KERNEL_ID.try_into().unwrap();
+                risc0_binfmt::compute_image_id_v2(user_id, kernel_id).unwrap()
+            }
+            ImageIdKind::Kernel(digest) => digest,
         };
-        let v2_image_id = v2_image_id.as_words();
+        let image_id_v2 = image_id_v2.as_words();
+
+        let image_id = match risc0_rv32im_ver() {
+            Some(SegmentVersion::V2) => image_id_v2,
+            _ => image_id_v1,
+        };
+
+        // These are intended to be temporary to provide support for having
+        // side-by-side testing while v1 & v2 coexist. The plan is to eventually
+        // remove these once only v2 remains.
         writeln!(
             &mut str,
-            "pub const {upper}_V2_{part}_ID: [u32; 8] = {v2_image_id:?};",
+            "pub const {upper}_ID_V1: [u32; 8] = {image_id_v1:?};",
         )
         .unwrap();
+        writeln!(
+            &mut str,
+            "pub const {upper}_ID_V2: [u32; 8] = {image_id_v2:?};",
+        )
+        .unwrap();
+        writeln!(&mut str, "pub const {upper}_ID: [u32; 8] = {image_id:?};").unwrap();
 
         str
     }

@@ -1763,6 +1763,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4445909572dbd556c457c849c4ca58623d84b27c8fff1e74b0b4227d8b90d17b"
 
 [[package]]
+name = "elf-utilities"
+version = "0.2.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "928c835c11b4212d3e3bbcb528612d182f1cad4582449ff4314ff2cb95fa14fe"
+dependencies = [
+ "bincode",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "embedded-alloc"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4401,8 +4412,10 @@ dependencies = [
  "derive_builder",
  "dirs",
  "docker-generate",
+ "elf-utilities",
  "hex",
  "risc0-binfmt",
+ "risc0-zkos-v1compat",
  "risc0-zkp",
  "risc0-zkvm-platform",
  "rzup",

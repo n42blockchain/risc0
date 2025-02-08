@@ -24,10 +24,9 @@ use super::{malformed_err, path_to_string, pb, Asset, AssetRequest, RedisParams}
 use crate::{
     host::client::env::{ProveKeccakRequest, ProveZkrRequest},
     receipt::{
-        merkle::MerkleProof,
-        segment::{decode_receipt_claim_from_seal_v1, SegmentVersion},
-        CompositeReceipt, FakeReceipt, InnerAssumptionReceipt, InnerReceipt, ReceiptMetadata,
-        SegmentReceipt, SuccinctReceipt,
+        merkle::MerkleProof, segment::decode_receipt_claim_from_seal_v1, CompositeReceipt,
+        FakeReceipt, InnerAssumptionReceipt, InnerReceipt, ReceiptMetadata, SegmentReceipt,
+        SuccinctReceipt,
     },
     receipt_claim::Unknown,
     Assumption, Assumptions, ExitCode, Groth16Receipt, Input, Journal, MaybePruned, Output,
@@ -260,7 +259,7 @@ impl TryFrom<pb::api::ProverOpts> for ProverOpts {
                 .max_segment_po2
                 .try_into()
                 .map_err(|_| malformed_err())?,
-            segment_version: SegmentVersion::V1,
+            segment_version: risc0_binfmt::SegmentVersion::V1,
         })
     }
 }
@@ -443,7 +442,7 @@ impl TryFrom<pb::core::SegmentReceipt> for SegmentReceipt {
                 .verifier_parameters
                 .ok_or(malformed_err())?
                 .try_into()?,
-            segment_version: SegmentVersion::V1,
+            segment_version: risc0_binfmt::SegmentVersion::V1,
         })
     }
 }

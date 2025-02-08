@@ -21,6 +21,7 @@ pub(crate) mod local;
 use std::{path::PathBuf, rc::Rc};
 
 use anyhow::{anyhow, Result};
+use risc0_binfmt::SegmentVersion;
 use serde::{Deserialize, Serialize};
 
 use risc0_circuit_recursion::control_id::ALLOWED_CONTROL_IDS;
@@ -32,10 +33,8 @@ use {self::bonsai::BonsaiProver, crate::is_dev_mode};
 use self::external::ExternalProver;
 
 use crate::{
-    get_version,
-    host::prove_info::ProveInfo,
-    receipt::{segment::SegmentVersion, DEFAULT_MAX_PO2},
-    ExecutorEnv, Receipt, SegmentReceiptVerifierParameters, SessionInfo, VerifierContext,
+    get_version, host::prove_info::ProveInfo, receipt::DEFAULT_MAX_PO2, ExecutorEnv, Receipt,
+    SegmentReceiptVerifierParameters, SessionInfo, VerifierContext,
 };
 
 /// A Prover can execute a given ELF binary and produce a

@@ -17,7 +17,7 @@ use core::fmt::Debug;
 
 use anyhow::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
-use risc0_binfmt::{tagged_iter, tagged_struct, Digestible, ExitCode, SystemState};
+use risc0_binfmt::{tagged_iter, tagged_struct, Digestible, ExitCode, SegmentVersion, SystemState};
 use risc0_circuit_rv32im::{
     layout::{SystemStateLayout, OUT_LAYOUT},
     CIRCUIT,
@@ -33,18 +33,6 @@ use serde::{Deserialize, Serialize};
 
 use super::{VerifierContext, DEFAULT_MAX_PO2};
 use crate::{sha, MaybePruned, ReceiptClaim};
-
-/// TODO(flaub)
-#[derive(
-    Clone, Copy, Debug, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize, PartialEq,
-)]
-pub enum SegmentVersion {
-    /// TODO(flaub)
-    V1,
-
-    /// TODO(flaub)
-    V2,
-}
 
 /// A receipt attesting to the execution of a Segment.
 ///

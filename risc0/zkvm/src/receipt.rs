@@ -25,6 +25,7 @@ use core::fmt::Debug;
 
 use anyhow::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
+use risc0_binfmt::SegmentVersion;
 use risc0_core::field::baby_bear::BabyBear;
 use risc0_zkp::{
     core::{
@@ -50,7 +51,7 @@ pub use self::groth16::{Groth16Receipt, Groth16ReceiptVerifierParameters};
 
 pub use self::{
     composite::{CompositeReceipt, CompositeReceiptVerifierParameters},
-    segment::{SegmentReceipt, SegmentReceiptVerifierParameters, SegmentVersion},
+    segment::{SegmentReceipt, SegmentReceiptVerifierParameters},
     succinct::{SuccinctReceipt, SuccinctReceiptVerifierParameters},
 };
 

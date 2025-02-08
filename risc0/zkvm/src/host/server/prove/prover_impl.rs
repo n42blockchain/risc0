@@ -15,6 +15,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
+use risc0_binfmt::{risc0_rv32im_ver, SegmentVersion};
 
 use super::{keccak::prove_keccak, ProverServer};
 use crate::{
@@ -26,11 +27,9 @@ use crate::{
     },
     prove_registered_zkr,
     receipt::{
-        segment::{decode_receipt_claim_from_seal_v1, SegmentVersion},
-        InnerReceipt, SegmentReceipt, SuccinctReceipt,
+        segment::decode_receipt_claim_from_seal_v1, InnerReceipt, SegmentReceipt, SuccinctReceipt,
     },
     receipt_claim::{MaybePruned, Merge, Unknown},
-    risc0_rv32im_ver,
     sha::Digestible,
     Assumption, AssumptionReceipt, CompositeReceipt, ExecutorEnv, ExecutorImpl,
     InnerAssumptionReceipt, Output, ProverOpts, Receipt, ReceiptClaim, Segment, Session,

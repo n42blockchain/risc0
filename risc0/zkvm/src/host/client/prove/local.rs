@@ -13,12 +13,12 @@
 // limitations under the License.
 
 use anyhow::Result;
+use risc0_binfmt::risc0_rv32im_ver;
 
 use super::{Executor, Prover, ProverOpts};
 use crate::{
-    get_prover_server, host::server::session::NullSegmentRef, risc0_rv32im_ver, Executor2,
-    ExecutorEnv, ExecutorImpl, ProveInfo, Receipt, SegmentInfo, SegmentVersion, SessionInfo,
-    VerifierContext,
+    get_prover_server, host::server::session::NullSegmentRef, Executor2, ExecutorEnv, ExecutorImpl,
+    ProveInfo, Receipt, SegmentInfo, SegmentVersion, SessionInfo, VerifierContext,
 };
 
 /// A [Prover] implementation that selects a [ProverServer][crate::ProverServer] by calling
