@@ -12,17 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(feature = "heap-embedded-alloc"))]
+#[cfg(all(feature = "heap-embedded-alloc", feature = "heap-custom-alloc"))]
+compile_error!("heap-embedded-alloc and heap-custom-alloc cannot be enabled at the same time");
+
+#[cfg(not(any(feature = "heap-embedded-alloc", feature = "heap-custom-alloc")))]
 pub(crate) mod bump;
 
 #[cfg(feature = "heap-embedded-alloc")]
 pub mod embedded;
+
+#[cfg(feature = "heap-custom-alloc")]
+pub(crate) mod custom;
 
 /// Estimate of used memory on the heap, in bytes.
 pub fn used() -> usize {
     cfg_if::cfg_if! {
         if #[cfg(feature = "heap-embedded-alloc")] {
             embedded::HEAP.used()
+        } else if #[cfg(feature = "heap-custom-alloc")] {
+            custom::used()
         } else {
             bump::used()
         }
@@ -34,6 +42,8 @@ pub fn free() -> usize {
     cfg_if::cfg_if! {
         if #[cfg(feature = "heap-embedded-alloc")] {
             embedded::HEAP.free()
+        } else if #[cfg(feature = "heap-custom-alloc")] {
+            custom::free()
         } else {
             bump::free()
         }
@@ -49,6 +59,8 @@ pub unsafe fn init() {
     cfg_if::cfg_if! {
         if #[cfg(feature = "heap-embedded-alloc")] {
             embedded::init();
+        } else if #[cfg(feature = "heap-custom-alloc")] {
+            custom::init();
         } else {
             bump::init();
         }

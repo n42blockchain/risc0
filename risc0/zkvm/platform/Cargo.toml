@@ -49,6 +49,7 @@ heap-embedded-alloc = [
   "dep:embedded-alloc",
   "rust-runtime",
 ]
+heap-custom-alloc = []
 panic-handler = []
 # Build a rust runtime
 rust-runtime = ["export-libm", "export-syscalls"]

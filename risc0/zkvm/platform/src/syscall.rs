@@ -752,27 +752,26 @@ pub unsafe extern "C" fn sys_alloc_aligned(bytes: usize, align: usize) -> *mut u
 /// # Safety
 ///
 /// This function should be safe to call, but clippy complains if it is not marked as `unsafe`.
-#[cfg(all(
-    feature = "export-syscalls",
-    feature = "heap-embedded-alloc",
-    target_os = "zkvm"
-))]
+#[cfg(all(feature = "export-syscalls", target_os = "zkvm"))]
 #[no_mangle]
 pub unsafe extern "C" fn sys_alloc_aligned(bytes: usize, align: usize) -> *mut u8 {
-    use core::alloc::GlobalAlloc;
-    crate::heap::embedded::HEAP.alloc(core::alloc::Layout::from_size_align(bytes, align).unwrap())
-}
+    #[cfg(feature = "heap-embedded-alloc")]
+    {
+        use core::alloc::GlobalAlloc;
+        crate::heap::embedded::HEAP
+            .alloc(core::alloc::Layout::from_size_align(bytes, align).unwrap())
+    }
 
-/// # Safety
-///
-/// This function should be safe to call, but clippy complains if it is not marked as `unsafe`.
-#[cfg(all(
-    feature = "export-syscalls",
-    not(feature = "heap-embedded-alloc"),
-    target_os = "zkvm"
-))]
-#[no_mangle]
-pub unsafe extern "C" fn sys_alloc_aligned(bytes: usize, align: usize) -> *mut u8 {
+    #[cfg(feature = "heap-custom-alloc")]
+    {
+        use core::alloc::GlobalAlloc;
+        crate::heap::custom::HEAP.alloc(core::alloc::Layout::from_size_align(bytes, align).unwrap())
+    }
+
+    #[cfg(all(
+        not(feature = "heap-custom-alloc"),
+        not(feature = "heap-embedded-alloc")
+    ))]
     crate::heap::bump::alloc_aligned(bytes, align)
 }
 
