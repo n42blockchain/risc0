@@ -386,3 +386,50 @@ fn extfield_deg4_mul(#[values(V1)] version: SegmentVersion) {
         run_test(version, env, EXTFIELD_DEG4_MUL_ELF);
     assert_eq!(result, expected);
 }
+
+// TOOD(flaub): fix for v2
+#[rstest]
+#[test_log::test]
+fn extfield_deg4_mul_consts(#[values(V1, V2)] version: SegmentVersion) {
+    // (3)(4) mod (x^4 + 1) = 5 (mod 7)
+    let lhs0 = BigUintWrap::from_str("04").unwrap();
+    let lhs1 = BigUintWrap::from_str("00").unwrap();
+    let lhs2 = BigUintWrap::from_str("00").unwrap();
+    let lhs3 = BigUintWrap::from_str("00").unwrap();
+    let rhs0 = BigUintWrap::from_str("03").unwrap();
+    let rhs1 = BigUintWrap::from_str("00").unwrap();
+    let rhs2 = BigUintWrap::from_str("00").unwrap();
+    let rhs3 = BigUintWrap::from_str("00").unwrap();
+    let monicirr0 = BigUintWrap::from_str("06").unwrap();
+    let monicirr1 = BigUintWrap::from_str("00").unwrap();
+    let monicirr2 = BigUintWrap::from_str("00").unwrap();
+    let monicirr3 = BigUintWrap::from_str("00").unwrap();
+    let prime = BigUintWrap::from_str("07").unwrap();
+    let expected0 = BigUintWrap::from_str("05").unwrap();
+    let expected1 = BigUintWrap::from_str("00").unwrap();
+    let expected2 = BigUintWrap::from_str("00").unwrap();
+    let expected3 = BigUintWrap::from_str("00").unwrap();
+    let expected = (expected0.0, expected1.0, expected2.0, expected3.0);
+    let env = ExecutorEnv::builder()
+        .write(&(
+            lhs0.0,
+            lhs1.0,
+            lhs2.0,
+            lhs3.0,
+            rhs0.0,
+            rhs1.0,
+            rhs2.0,
+            rhs3.0,
+            monicirr0.0,
+            monicirr1.0,
+            monicirr2.0,
+            monicirr3.0,
+            prime.0,
+        ))
+        .unwrap()
+        .build()
+        .unwrap();
+    let result: (BigUint, BigUint, BigUint, BigUint) =
+        run_test(version, env, EXTFIELD_DEG4_MUL_ELF);
+    assert_eq!(result, expected);
+}
