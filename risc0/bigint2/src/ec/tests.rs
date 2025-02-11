@@ -93,7 +93,7 @@ fn ec_add_basic(#[values(V1, V2)] version: SegmentVersion) {
 // TODO(flaub): fix for v2
 #[rstest]
 #[test_log::test]
-fn ec_double_basic(#[values(V1)] version: SegmentVersion) {
+fn ec_double_basic(#[values(V1, V2)] version: SegmentVersion) {
     let point: Option<[[u32; 8]; 2]> = Some([
         [
             0x16F81798, 0x59F2815B, 0x2DCE28D9, 0x029BFCDB, 0xCE870B07, 0x55A06295, 0xF9DCBBAC,
