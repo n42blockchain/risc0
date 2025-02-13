@@ -26,18 +26,17 @@ struct Buffer {
   size_t rows;
   size_t cols;
   bool checked;
+  char padding[7];
 
   __device__ void set(size_t row, size_t col, Fp val) {
     Fp& elem = buf[col * rows + row];
+    #ifdef DEBUG
     if (elem != Fp::invalid() && elem != val && checked) {
       printf("set(row: %lu, col: %lu, val: 0x%08x) cur: 0x%08x\n",
-             row,
-             col,
-             val.asUInt32(),
-             elem.asUInt32());
+             row, col, val.asUInt32(), elem.asUInt32());
       assert(false && "Inconsistent set");
     }
-    // printf("set(row: %lu, col: %lu, val: 0x%08x)\n", row, col, val.asUInt32());
+    #endif
     elem = val;
   }
 
@@ -49,6 +48,27 @@ struct Buffer {
     }
     // printf("get(row: %lu, col: %lu) -> 0x%08x\n", row, col, ret.asUInt32());
     return ret;
+  }
+
+  __device__ void set_column(size_t col, const Fp* values, size_t count) {
+    // Direct column write is already efficient in column-major
+    size_t base = col * rows;
+    for (size_t i = threadIdx.x; i < count; i += blockDim.x) {
+      buf[base + i] = values[i];
+    }
+  }
+
+  __device__ void get_column(size_t col, Fp* values, size_t count) {
+    size_t base = col * rows;
+    for (size_t i = threadIdx.x; i < count; i += blockDim.x) {
+      values[i] = buf[base + i];
+    }
+  }
+
+  // Add alignment hints for better memory access
+  __device__ size_t get_aligned_col_stride() const {
+    // Round up to nearest multiple of 128 bytes (typical cache line size)
+    return ((rows * sizeof(Fp) + 127) & ~127) / sizeof(Fp);
   }
 };
 
