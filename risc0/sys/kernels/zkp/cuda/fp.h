@@ -192,5 +192,27 @@ __device__ constexpr inline Fp pow(Fp x, size_t n) {
 /// Computed this way, the 'inverse' of zero comes out as zero, which is convenient in many cases,
 /// so we leave it.
 __device__ constexpr inline Fp inv(Fp x) {
-  return pow(x, Fp::P - 2);
+    // Handle special cases
+    if (x == Fp(0) || x == Fp(1)) return x;
+
+    // Use Extended Euclidean Algorithm
+    int32_t t = 0;
+    int32_t newt = 1;
+    uint32_t r = Fp::P;
+    uint32_t newr = x.asUInt32();
+
+    while (newr != 0) {
+        uint32_t quotient = r / newr;
+        int32_t tempt = newt;
+        newt = t - quotient * newt;
+        t = tempt;
+        uint32_t tempr = newr;
+        newr = r - quotient * newr;
+        r = tempr;
+    }
+
+    // Make sure t is positive
+    if (t < 0) t += Fp::P;
+
+    return Fp::fromRaw(Fp(uint32_t(t)).asRaw());
 }
