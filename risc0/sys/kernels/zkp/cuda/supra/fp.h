@@ -16,11 +16,21 @@
 
 #include <ff/baby_bear.hpp>
 
-static __device__ bb31_t pow(bb31_t b, int e) {
-  return b ^ (unsigned int)e;
+static __forceinline__ __device__ bb31_t pow(bb31_t b, int e) {
+    bb31_t result = bb31_t(1);
+    bb31_t base = b;
+
+    while (e > 0) {
+        if (e & 1) {
+            result = result * base;
+        }
+        base = base * base;
+        e >>= 1;
+    }
+    return result;
 }
 
-static __device__ bb31_t inv(bb31_t a) {
+static __forceinline__ __device__ bb31_t inv(bb31_t a) {
   return a.reciprocal();
 }
 
