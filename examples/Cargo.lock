@@ -3280,6 +3280,7 @@ dependencies = [
  "risc0-zkp",
  "risc0-zkvm",
  "risc0-zkvm-methods",
+ "tracing",
  "tracing-subscriber 0.3.19",
  "workerpool",
 ]

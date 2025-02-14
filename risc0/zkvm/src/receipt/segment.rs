@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use alloc::{collections::BTreeSet, string::String, vec::Vec};
-use core::fmt::Debug;
 
 use anyhow::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -49,6 +48,7 @@ pub struct SegmentReceipt {
     /// Segment was faithfully executed. It is largely opaque cryptographic data, but contains a
     /// non-opaque claim component, which can be conveniently accessed with
     /// [SegmentReceipt::claim].
+    #[debug("{} bytes", self.get_seal_bytes().len())]
     pub seal: Vec<u32>,
 
     /// Segment index within the [Receipt](crate::Receipt)
