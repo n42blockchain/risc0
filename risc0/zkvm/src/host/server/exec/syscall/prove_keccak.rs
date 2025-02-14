@@ -18,7 +18,10 @@ use anyhow::Result;
 use risc0_circuit_rv32im::prove::emu::addr::ByteAddr;
 use risc0_zkvm_platform::{syscall::reg_abi::*, WORD_SIZE};
 
-use crate::{host::client::env::ProveKeccakRequest, Assumption, AssumptionReceipt};
+use crate::{
+    host::{api::convert::try_keccak_bytes_to_input, client::env::ProveKeccakRequest},
+    Assumption, AssumptionReceipt,
+};
 
 use super::{Syscall, SyscallContext, SyscallKind};
 
@@ -43,7 +46,7 @@ impl Syscall for SysProveKeccak {
             claim_digest: claim,
             po2,
             control_root,
-            input,
+            input: try_keccak_bytes_to_input(&input)?,
         };
 
         if let Some(coprocessor) = &ctx.syscall_table().coprocessor {

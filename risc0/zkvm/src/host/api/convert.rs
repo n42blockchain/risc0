@@ -17,6 +17,7 @@ use std::{fmt::Debug, path::PathBuf};
 use anyhow::{anyhow, bail, Result};
 use prost::{Message, Name};
 use risc0_binfmt::SystemState;
+use risc0_circuit_keccak::KeccakState;
 use risc0_zkp::core::digest::Digest;
 use serde::Serialize;
 
@@ -1032,11 +1033,29 @@ impl TryFrom<pb::api::ProveKeccakRequest> for ProveKeccakRequest {
     type Error = anyhow::Error;
 
     fn try_from(value: pb::api::ProveKeccakRequest) -> Result<Self> {
+        let input = try_keccak_bytes_to_input(&value.input)?;
+
         Ok(Self {
             claim_digest: value.claim_digest.ok_or(malformed_err())?.try_into()?,
             po2: value.po2 as usize,
             control_root: value.control_root.ok_or(malformed_err())?.try_into()?,
-            input: value.input,
+            input,
         })
     }
+}
+
+#[stability::unstable]
+pub(crate) fn keccak_input_to_bytes(input: &[KeccakState]) -> Vec<u8> {
+    // Note: safe to cast slice given alignment of KeccakState (8 bytes) is greater than
+    // the alignment of the u8 buffer.
+    bytemuck::cast_slice(input).to_vec()
+}
+
+#[stability::unstable]
+pub(crate) fn try_keccak_bytes_to_input(input: &[u8]) -> Result<Vec<KeccakState>> {
+    input
+        .chunks_exact(std::mem::size_of::<KeccakState>())
+        .map(bytemuck::try_pod_read_unaligned)
+        .collect::<Result<_, _>>()
+        .map_err(|e| anyhow!("Failed to convert input bytes to KeccakState: {}", e))
 }
