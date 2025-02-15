@@ -21,7 +21,6 @@ use risc0_zkvm::guest::env;
 #[cfg(any(feature = "num-bigint-dig", feature = "num-bigint"))]
 fn main() {
     use num_bigint::BigUint;
-    use risc0_bigint2::ToBigInt2Buffer;
 
     let lhs = [[0u32; risc0_bigint2::field::FIELD_256_WIDTH_WORDS]; risc0_bigint2::field::EXT_DEGREE_4];
     let rhs = [[0u32; risc0_bigint2::field::FIELD_256_WIDTH_WORDS]; risc0_bigint2::field::EXT_DEGREE_4];
