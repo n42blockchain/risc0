@@ -265,7 +265,7 @@ const char* risc0_circuit_rv32im_v2_cpu_witgen(uint32_t mode,
   size_t split = preflight->tableSplitCycle;
   try {
     switch (mode) {
-    case kStepModeParallel: {
+    case kStepModeParallel: /*{
       auto begin1 = poolstl::iota_iter<uint32_t>(0);
       auto end1 = poolstl::iota_iter<uint32_t>(split);
       std::for_each(poolstl::par, begin1, end1, [&](uint32_t cycle) {
@@ -277,7 +277,7 @@ const char* risc0_circuit_rv32im_v2_cpu_witgen(uint32_t mode,
       std::for_each(poolstl::par, begin2, end2, [&](uint32_t cycle) {
         stepExec(*buffers, *preflight, tables, cycle);
       });
-    } break;
+    } break;*/
     case kStepModeSeqForward:
       for (size_t cycle = 0; cycle < lastCycle; cycle++) {
         stepExec(*buffers, *preflight, tables, cycle);
